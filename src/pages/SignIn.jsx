@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { AlertError } from '../elements/Alert'
 import { FormSignIn, Input, TitleSigle, ButtonPrimary, ButtonSecondary } from '../elements/FormSignIn'
 import { MainContainer } from '../elements/main'
+import { auth } from '../firebase'
 const initialState = {
     email: '',
     password: '',
@@ -19,8 +20,21 @@ const SignIn = () => {
         if (!password.trim()) return setError('ingrese una contraseña')
         if (password.length <= 6) return setError('la contraseña debe ser mayor o igual de 6 caracteres')
         setError(null)
-        console.log('toda va bien por ahora')
+        if(isSignIn) signUp()
     }
+    const signUp = useCallback(async () => {
+            try {
+                const res = await auth.createUserWithEmailAndPassword(email, password)
+                console.log(res)
+            } catch (error) {
+                console.log(error)
+                if(error.code === 'auth/invalid-email') return setError('email no es valido')
+                if(error.code === 'auth/email-already-in-use') return setError('el usuario ya existe')
+                setError(error.message)
+            }
+        },
+        [email, password],
+    )
     return (
         <MainContainer>
             <TitleSigle>
