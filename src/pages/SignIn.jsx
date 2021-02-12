@@ -1,15 +1,16 @@
 import React, { useState, useCallback } from 'react'
+import { withRouter } from 'react-router-dom'
 import { AlertError } from '../elements/Alert'
 import { FormSignIn, Input, TitleSigle, ButtonPrimary, ButtonSecondary } from '../elements/FormSignIn'
 import { MainContainer } from '../elements/main'
-import { auth } from '../firebase'
+import { auth, db } from '../firebase'
 const initialState = {
     email: '',
     password: '',
     error: null,
     isSignIn: true
 }
-const SignIn = () => {
+const SignIn = (props) => {
     const [email, setEmail] = useState(initialState.email)
     const [password, setPassword] = useState(initialState.password)
     const [error, setError] = useState(initialState.error)
@@ -20,12 +21,37 @@ const SignIn = () => {
         if (!password.trim()) return setError('ingrese una contraseña')
         if (password.length <= 6) return setError('la contraseña debe ser mayor o igual de 6 caracteres')
         setError(null)
-        if(isSignIn) signUp()
+        if (isSignIn) return signUp()
+        signIn()
     }
+    const signIn = useCallback(async () => {
+        try {
+            const res = await auth.signInWithEmailAndPassword(email, password)
+            console.log(res.user)
+            setEmail(initialState.email)
+            setPassword(initialState.password)
+            setError(initialState.error)
+            props.history.push('/admin')
+        } catch (error) {
+            console.log(error)
+            if (error.code === 'auth/invalid-email') return setError('Email invalido')
+            if (error.code === 'auth/user-not-found') return setError('ese usuario no existe')
+            if (error.code === 'auth/wrong-password') return setError('contraseña incorrecta')
+            setError(error.message)
+        }
+    }, [email, password, props.history])
     const signUp = useCallback(async () => {
             try {
                 const res = await auth.createUserWithEmailAndPassword(email, password)
-                console.log(res)
+                console.log(res.user)
+                await db.collection('users').doc(res.user.uid).set({
+                    uid: res.user.uid,
+                    email: res.user.email
+                })
+                setEmail(initialState.email)
+                setPassword(initialState.password)
+                setError(initialState.error)
+                props.history.push('/admin')
             } catch (error) {
                 console.log(error)
                 if(error.code === 'auth/invalid-email') return setError('email no es valido')
@@ -33,7 +59,7 @@ const SignIn = () => {
                 setError(error.message)
             }
         },
-        [email, password],
+        [email, password,props.history],
     )
     return (
         <MainContainer>
@@ -67,4 +93,4 @@ const SignIn = () => {
     )
 }
 
-export default SignIn
+export default withRouter(SignIn)

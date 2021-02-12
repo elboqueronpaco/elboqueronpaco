@@ -37,4 +37,5 @@ export const MenuList = styled.ul`
 export const MenuLink = styled(Link)`
     text-decoration: none;
     color: #ffffff;
+    padding: 1rem;
 `

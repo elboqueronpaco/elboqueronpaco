@@ -1,7 +1,12 @@
 import React from 'react'
+import { withRouter } from 'react-router-dom'
+import { ButtonPrimary } from '../elements/FormSignIn'
 import { HeaderContainer, HeaderStyled, LogoLink, Menu, MenuLink, MenuList } from '../elements/header'
+import { auth } from '../firebase'
 
-const Header = () => {
+const Header = (props) => {
+    const signOut = () => auth.signOut()
+        .then(() => props.history.push('/signin'))
     return (
         <HeaderStyled>
             <HeaderContainer>
@@ -13,7 +18,17 @@ const Header = () => {
                             <li><MenuLink to='/'>Inicio</MenuLink></li>
                         </MenuList>
                         <MenuList>
-                            <li><MenuLink to='/signin'>Ingresar</MenuLink></li>
+                            {
+                                props.firebaseUser !== null ? (
+                                    <>
+                                        <li><MenuLink to='/admin'>Admin</MenuLink></li>
+                                        <li><ButtonPrimary onClick={signOut} >cerrar</ButtonPrimary></li>
+                                    </>
+                                ) : (
+                                        
+                                    <li><MenuLink to='/signin'>Ingresar</MenuLink></li>
+                                )
+                            }
                         </MenuList>
                     </Menu>
                 </aside>
@@ -22,4 +37,4 @@ const Header = () => {
     )
 }
 
-export default Header
+export default withRouter(Header)
